@@ -25,6 +25,18 @@ echo "dtoverlay=dwc2,dr_mode=host" >> /boot/firmware/usercfg.txt
 cd /lib/firmware/brcm
 wget https://raw.githubusercontent.com/RPi-Distro/firmware-nonfree/master/brcm/brcmfmac43455-sdio.txt
 cp brcmfmac43455-sdio.raspberrypi,4-model-b.txt brcmfmac43456-sdio.raspberrypi,4-compute-module.txt
+#edit network configuration
+vi /etc/netplan/50-cloud-init.yaml
+#add your wifis section like below replacing yourSSID and yourPASSWORD with real values
+
+#    wifis:
+#      wlan0:
+#        dhcp4: true
+#        optional: true
+#        access-points:
+#          yourSSID:
+#            password: "yourPASSWORD"
+
 reboot
 
 #now install OpenVINO
