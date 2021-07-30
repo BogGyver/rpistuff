@@ -73,8 +73,8 @@ git clone --recursive -b master https://github.com/microsoft/onnxruntime.git
 #add --arm or --arm64 if compiling on gcc8.3 due to a bug and also set the -latomic flags; see: https://github.com/microsoft/onnxruntime/issues/4189
 echo 'string(APPEND CMAKE_CXX_FLAGS " -latomic")' >> ~/onnxruntime/cmake/CMakeLists.txt
 echo 'string(APPEND CMAKE_C_FLAGS " -latomic")' >> ~/onnxruntime/cmake/CMakeLists.txt
-BUILDTYPE=Release
-BUILDARGS="--config ${BUILDTYPE} --parallel --arm"
+BUILDTYPE=MinSizeRel
+BUILDARGS="--config ${BUILDTYPE} --parallel --arm --use_openvino MYRIAD_FP16 "
 sudo /bin/sh onnxruntime/dockerfiles/scripts/install_common_deps.sh
 cd ~/onnxruntime/cmake/external/onnx && sudo python3 setup.py install
 
