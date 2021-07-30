@@ -72,7 +72,9 @@ sudo /bin/sh onnxruntime/dockerfiles/scripts/install_common_deps.sh
 cd ~/onnxruntime/cmake/external/onnx && sudo python3 setup.py install
 
 #ensure the Intel NCS2 is plugged into the rPi USB otherwise tests will fail and last a lot longer
-#add --arm or --arm64 if compiling on gcc8.3 due to a bug see: https://github.com/microsoft/onnxruntime/issues/4189
+#add --arm or --arm64 if compiling on gcc8.3 due to a bug and also set the -latomic flags; see: https://github.com/microsoft/onnxruntime/issues/4189
+echo 'string(APPEND CMAKE_CXX_FLAGS " -latomic")' >> ~/onnxruntime/cmake/CMakeLists.txt
+echo 'string(APPEND CMAKE_C_FLAGS " -latomic")' >> ~/onnxruntime/cmake/CMakeLists.txt
 cd ~/onnxruntime && ./build.sh --config Release --update --build --parallel --use_openvino MYRIAD_FP16 --build_shared_lib --build_wheel --arm
 sudo pip3 install build/Linux/Release/dist/*-linux_x86_64.whl
 
