@@ -6,7 +6,7 @@
 
 #now configure cameras, monitor and USB
 sudo apt update
-sudo apt ugprade
+sudo apt upgrade
 
 sudo apt-get install -y p7zip-full
 cd ~
