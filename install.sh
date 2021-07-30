@@ -27,11 +27,6 @@ wget https://raw.githubusercontent.com/RPi-Distro/firmware-nonfree/master/brcm/b
 cp brcmfmac43455-sdio.raspberrypi,4-model-b.txt brcmfmac43456-sdio.raspberrypi,4-compute-module.txt
 reboot
 
-#update and upgrade
-sudo apt update
-sudo apt upgrade
-sudo reboot
-
 #now install OpenVINO
 curl -O https://storage.openvinotoolkit.org/repositories/openvino/packages/2021.4/l_openvino_toolkit_runtime_raspbian_p_2021.4.582.tgz
 sudo mkdir -p /opt/intel/openvino_2021
