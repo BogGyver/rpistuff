@@ -5,6 +5,8 @@
 # flip swtich and reboot, connect to hdmi monitor to get IP address, ssh into unit as pi/raspberry
 
 #now configure cameras, monitor and USB
+sudo apt update
+sudo apt ugprade
 sudo apt-get install -y p7zip-full
 cd ~
 wget https://www.waveshare.com/w/upload/4/41/CM4_dt_blob.7z
@@ -18,6 +20,10 @@ sudo rm -rf CM4_dt_blob
 sudo su
 echo "#enable USB" >> /boot/config.txt
 echo "dtoverlay=dwc2,dr_mode=host" >> /boot/config.txt
+#for CM4 Wifi
+cd /lib/firmware/brcm
+wget https://raw.githubusercontent.com/RPi-Distro/firmware-nonfree/master/brcm/brcmfmac43455-sdio.txt
+cp brcmfmac43455-sdio.raspberrypi,4-model-b.txt brcmfmac43456-sdio.raspberrypi,4-compute-module.txt
 reboot
 
 #update and upgrade
