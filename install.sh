@@ -7,7 +7,7 @@
 #now configure cameras, monitor and USB
 sudo apt update
 sudo apt ugprade
-sudo wget https://datasheets.raspberrypi.org/cmio/dt-blob-disp1-cam2.bin -O /boot/dt-blob.bin
+#sudo wget https://datasheets.raspberrypi.org/cmio/dt-blob-disp1-cam2.bin -O /boot/dt-blob.bin
 
 sudo apt-get install -y p7zip-full
 cd ~
