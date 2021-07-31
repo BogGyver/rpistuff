@@ -1,5 +1,5 @@
 # use rpiboot to mount flash drive to computer
-# install the Ubuntu 20.04 LTE arm64 using Raspberry PI Imager
+# install the Rasobery OS buster (32b) using Raspberry PI Imager
 # start rpiboot again and disconenct/reconnect USB from PI to computer
 # place an empty file called ssh into the boot drive root folder to enable ssh
 # flip swtich and reboot, connect to hdmi monitor to get IP address, ssh into unit as pi/raspberry
@@ -14,17 +14,13 @@ wget https://www.waveshare.com/w/upload/4/41/CM4_dt_blob.7z
 7z x CM4_dt_blob.7z -O./CM4_dt_blob
 sudo chmod 777 -R CM4_dt_blob
 cd CM4_dt_blob/
-sudo  dtc -I dts -O dtb -o /boot/firmware/dt-blob.bin dt-blob-disp0-double_cam.dts
+sudo  dtc -I dts -O dtb -o /boot/dt-blob.bin dt-blob-disp0-double_cam.dts
 cd ~
 sudo rm -rf CM4_dt_blob.7z
 sudo rm -rf CM4_dt_blob
 sudo su
-echo "#enable USB" >> /boot/firmware/usercfg.txt
-echo "dtoverlay=dwc2,dr_mode=host" >> /boot/firmware/usercfg.txt
-#for CM4 Wifi
-cd /lib/firmware/brcm
-wget https://raw.githubusercontent.com/RPi-Distro/firmware-nonfree/master/brcm/brcmfmac43455-sdio.txt
-cp brcmfmac43455-sdio.raspberrypi,4-model-b.txt brcmfmac43456-sdio.raspberrypi,4-compute-module.txt
+echo "#enable USB" >> /boot/config.txt
+echo "dtoverlay=dwc2,dr_mode=host" >> /boot/config.txt
 #edit network configuration
 vi /etc/netplan/50-cloud-init.yaml
 #add your wifis section like below replacing yourSSID and yourPASSWORD with real values
