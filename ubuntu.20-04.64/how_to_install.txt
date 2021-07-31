@@ -1,0 +1,99 @@
+# use rpiboot to mount flash drive to computer
+# install the Ubuntu 20.04 LTE arm64 using Raspberry PI Imager
+# start rpiboot again and disconenct/reconnect USB from PI to computer
+# place an empty file called ssh into the boot drive root folder to enable ssh
+# flip swtich and reboot, connect to hdmi monitor to get IP address, ssh into unit as pi/raspberry
+
+#now configure cameras, monitor and USB
+sudo apt update
+sudo apt upgrade
+
+sudo apt-get install -y p7zip-full
+cd ~
+wget https://www.waveshare.com/w/upload/4/41/CM4_dt_blob.7z
+7z x CM4_dt_blob.7z -O./CM4_dt_blob
+sudo chmod 777 -R CM4_dt_blob
+cd CM4_dt_blob/
+sudo  dtc -I dts -O dtb -o /boot/firmware/dt-blob.bin dt-blob-disp0-double_cam.dts
+cd ~
+sudo rm -rf CM4_dt_blob.7z
+sudo rm -rf CM4_dt_blob
+sudo su
+echo "#enable USB" >> /boot/firmware/usercfg.txt
+echo "dtoverlay=dwc2,dr_mode=host" >> /boot/firmware/usercfg.txt
+#for CM4 Wifi
+cd /lib/firmware/brcm
+wget https://raw.githubusercontent.com/RPi-Distro/firmware-nonfree/master/brcm/brcmfmac43455-sdio.txt
+cp brcmfmac43455-sdio.raspberrypi,4-model-b.txt brcmfmac43456-sdio.raspberrypi,4-compute-module.txt
+#edit network configuration
+vi /etc/netplan/50-cloud-init.yaml
+#add your wifis section like below replacing yourSSID and yourPASSWORD with real values
+
+#    wifis:
+#      wlan0:
+#        dhcp4: true
+#        optional: true
+#        access-points:
+#          yourSSID:
+#            password: "yourPASSWORD"
+
+reboot
+
+#dev tools
+sudo apt install -y build-essential
+sudo snap install cmake --classic
+sudo apt install -y git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev
+
+#python
+sudo apt install -y python3
+sudo apt install -y python3-pip
+sudo rm /usr/bin/python
+sudo ln -s /usr/bin/python3 /usr/bin/python
+
+#get rpistuff repo
+cd ~/
+git clone https://github.com/boggyver/rpistuff.git
+cd rpistuff/ubuntu.20-04.64
+
+#opencv
+tar -xvzf opencv.ubuntu.20-04.arm64.tar.gz
+cd opencv/build
+sudo make install
+cd ~/rpistuff/ubuntu.20-04.64
+rm -rf opencv
+
+#openVino
+tar -xvzf openvino.ubuntu.20-04.arm64.tar.gz
+git clone https://github.com/openvinotoolkit/openvino.git --branch 2021.4
+cd openvino
+sh install_build_dependencies.sh
+export OpenCV_DIR=/usr/local/lib
+sudo make install
+echo "source /usr/local/bin/setupvars.sh" >> ~/.bashrc
+#there might be a need to copy the python folder from ~/openvino to /usr/local
+#configure USB for Myriad X NCS2
+sudo usermod -a -G users "$(whoami)"
+sudo sh /usr/local/install_dependencies/install_NCS_udev_rules.sh
+echo "2021.4 LTS" > /usr/local/deployment_tools/inference_engine/version.txt
+#test openVino
+mkdir ~/models
+cd ~/models
+wget https://download.01.org/opencv/2019/open_model_zoo/R1/models_bin/age-gender-recognition-retail-0013/FP16/age-gender-recognition-retail-0013.xml
+wget https://download.01.org/opencv/2019/open_model_zoo/R1/models_bin/age-gender-recognition-retail-0013/FP16/age-gender-recognition-retail-0013.bin
+cd ~/rpistuff/ubuntu.20-04.64/openvino/bin/aarch64/Release
+./benchmark_app -i ~/rpistuff/ubuntu.20-04.64/openvino/president_reagan-62x62.png -m ~/models/age-gender-recognition-retail-0013.xml ./lib -api async -d MYRIAD
+rm -rf ~/models
+cd ~/rpistuff/ubuntu.20-04.64
+rm -rf openvino
+
+#support for onnxruntime with support for Intel NCS2/Myriad X
+sudo pip3 install -y wheel
+sudo pip3 install -y Cython
+sudo pip3 install -y flake8
+sudo pip3 install --upgrade google-api-python-client
+sudo apt-get install -y protobuf-compiler
+
+sudo pip3 install ~/rpistuff/ubuntu.20-04.64/*-linux_aarch64.whl
+cd ~
+rm -rf rpistuff
+

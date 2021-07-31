@@ -1,0 +1,92 @@
+#dev tools
+sudo apt install -y build-essential
+sudo snap install cmake --classic
+sudo apt install -y git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev
+#python
+sudo apt install -y python3
+sudo apt install -y python3-pip
+sudo rm /usr/bin/python
+sudo ln -s /usr/bin/python3 /usr/bin/python
+
+#opencv
+cd ~/
+git clone https://github.com/opencv/opencv.git
+cd opencv && mkdir build && cd build
+cmake –DCMAKE_BUILD_TYPE=Release –DCMAKE_INSTALL_PREFIX=/usr/local ..
+make -j4
+sudo make install
+
+#openVino
+cd ~/
+git clone https://github.com/openvinotoolkit/openvino.git --branch 2021.4
+cd ~/openvino/inference-engine
+git submodule update --init --recursive
+cd ~/openvino
+sh install_build_dependencies.sh
+export OpenCV_DIR=/usr/local/lib
+cd ~/openvino
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release \
+    -DENABLE_MKL_DNN=OFF \
+    -DENABLE_CLDNN=ON \
+    -DENABLE_GNA=OFF \
+    -DENABLE_SSE42=OFF \
+    -DTHREADING=SEQ \
+    -DENABLE_SAMPLES=ON \
+    ..
+make -j4
+
+
+sudo make install
+echo "source /usr/local/bin/setupvars.sh" >> ~/.bashrc
+#there might be a need to copy the python folder from ~/openvino to /usr/local
+#configure USB for Myriad X NCS2
+sudo usermod -a -G users "$(whoami)"
+sudo sh /usr/local/install_dependencies/install_NCS_udev_rules.sh
+echo "2021.4 LTS" > /usr/local/deployment_tools/inference_engine/version.txt
+#test openVino
+mkdir ~/models
+cd ~/models
+wget https://download.01.org/opencv/2019/open_model_zoo/R1/models_bin/age-gender-recognition-retail-0013/FP16/age-gender-recognition-retail-0013.xml
+wget https://download.01.org/opencv/2019/open_model_zoo/R1/models_bin/age-gender-recognition-retail-0013/FP16/age-gender-recognition-retail-0013.bin
+mkdir ~/OpenVINO/ && cd ~/OpenVINO
+wget http://software.intel.com/content/dam/develop/external/us/en/documents/Setup%20Additional%20Files%20Package.tar.gz
+tar xvzf Setup\ Additional\ Files\ Package.tar.gz
+
+cd ~/openvino/bin/aarch64/Release
+./benchmark_app -i ~/openvino/president_reagan-62x62.png -m ~/models/age-gender-recognition-retail-0013.xml ./lib -api async -d MYRIAD
+rm -rf openvino
+rm -rf models
+
+
+#download configure and install onnxruntime with support for Intel NCS2/Myriad X
+sudo pip3 install -y wheel
+sudo pip3 install -y Cython
+sudo pip3 install -y flake8
+sudo pip3 install --upgrade google-api-python-client
+sudo apt-get install -y protobuf-compiler
+git clone --recursive https://github.com/microsoft/onnxruntime.git --branch v1.8.1
+
+#ensure the Intel NCS2 is plugged into the rPi USB otherwise tests will fail and last a lot longer
+#add --arm or --arm64 if compiling on gcc8.3 due to a bug and also set the -latomic flags; see: https://github.com/microsoft/onnxruntime/issues/4189
+#only for 32 bit
+#  echo 'string(APPEND CMAKE_CXX_FLAGS " -latomic")' >> ~/onnxruntime/cmake/CMakeLists.txt
+#  echo 'string(APPEND CMAKE_C_FLAGS " -latomic")' >> ~/onnxruntime/cmake/CMakeLists.txt
+BUILDTYPE=MinSizeRel
+BUILDARGS="--config ${BUILDTYPE} --parallel --arm64 --use_openvino MYRIAD_FP16 "
+sudo /bin/sh onnxruntime/dockerfiles/scripts/install_common_deps.sh
+cd ~/onnxruntime/cmake/external/onnx && sudo python3 setup.py install
+
+cd ~/onnxruntime 
+#Update and Build
+./build.sh ${BUILDARGS} --update --build
+
+# Build Shared Library
+./build.sh ${BUILDARGS} --build_shared_lib
+
+# Build Python Bindings and Wheel
+./build.sh ${BUILDARGS} --enable_pybind --build_wheel --skip_tests
+
+sudo pip3 install build/Linux/Release/dist/*-linux_aarch64.whl
+
+
